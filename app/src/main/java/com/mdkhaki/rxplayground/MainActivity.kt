@@ -8,6 +8,7 @@ import com.mdkhaki.rxplayground.models.Task
 import io.reactivex.Observable
 import io.reactivex.Observer
 import io.reactivex.android.schedulers.AndroidSchedulers
+import io.reactivex.disposables.CompositeDisposable
 import io.reactivex.disposables.Disposable
 import io.reactivex.functions.Predicate
 import io.reactivex.schedulers.Schedulers
@@ -15,9 +16,14 @@ import io.reactivex.schedulers.Schedulers
 
 class MainActivity : AppCompatActivity() {
     val TAG: String = "MainActivity"
+
+    // vars
+    val disposables: CompositeDisposable = CompositeDisposable()
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
+
 
         val taskObservable: Observable<Task> = Observable
             .fromIterable(DataSource.createTasksList())
@@ -36,6 +42,7 @@ class MainActivity : AppCompatActivity() {
 
             override fun onSubscribe(d: Disposable) {
                 Log.d(TAG, "onSubscribe: ")
+                disposables.add(d)
             }
 
             override fun onNext(t: Task) {
@@ -47,5 +54,14 @@ class MainActivity : AppCompatActivity() {
                 Log.d(TAG, "onError: " + e.message)
             }
         })
+
+    }
+
+
+    override fun onDestroy() {
+        disposables.clear()
+        // hard clear
+        disposables.dispose()
+        super.onDestroy()
     }
 }
