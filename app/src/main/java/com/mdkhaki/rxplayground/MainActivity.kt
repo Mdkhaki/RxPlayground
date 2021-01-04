@@ -12,6 +12,7 @@ import io.reactivex.disposables.CompositeDisposable
 import io.reactivex.disposables.Disposable
 import io.reactivex.functions.Predicate
 import io.reactivex.schedulers.Schedulers
+import java.util.concurrent.TimeUnit
 
 
 class MainActivity : AppCompatActivity() {
@@ -124,7 +125,7 @@ class MainActivity : AppCompatActivity() {
         /** Range Operator */
 
         val taskRangeObservable =
-            Observable.range(1,10)
+            Observable.range(1, 10)
 //                .repeat()
                 .subscribeOn(Schedulers.io())
                 .observeOn(AndroidSchedulers.mainThread())
@@ -148,6 +149,68 @@ class MainActivity : AppCompatActivity() {
 
                 }
                 )
+
+        /** Interval */
+
+//         emit an observable every time interval
+
+        val intervalObservable = Observable
+            .interval(1, TimeUnit.SECONDS)
+            .subscribeOn(Schedulers.io())
+            .takeWhile { aLong ->
+                Log.d(TAG, "interval || test: " + Thread.currentThread().name + " " + aLong)
+                // stop the process if more than 5 seconds passes
+                aLong <= 5
+            }
+            .observeOn(AndroidSchedulers.mainThread())
+
+        intervalObservable.subscribe(object :
+        Observer<Long>{
+            override fun onComplete() {
+                Log.d(TAG, "interval || onComplete: ")
+            }
+
+            override fun onSubscribe(d: Disposable) {
+                Log.d(TAG, "interval || onSubscribe: ")
+            }
+
+            override fun onNext(t: Long) {
+                Log.d(TAG, "interval || onNext: ")
+            }
+
+            override fun onError(e: Throwable) {
+                Log.d(TAG, "interval || onError: ")
+            }
+
+        })
+
+        /** Timer */
+
+        // emit an observable every time interval
+        val timerObservable = Observable
+            .timer(3, TimeUnit.SECONDS)
+            .subscribeOn(Schedulers.io())
+            .observeOn(AndroidSchedulers.mainThread())
+
+        timerObservable.subscribe(object :
+            Observer<Long> {
+            override fun onComplete() {
+                Log.d(TAG, "timer || onComplete: ")
+            }
+
+            override fun onSubscribe(d: Disposable) {
+                Log.d(TAG, "timer || onSubscribe: ")
+            }
+
+            override fun onNext(t: Long) {
+                Log.d(TAG, "timer || onNext: ")
+            }
+
+            override fun onError(e: Throwable) {
+                Log.d(TAG, "timer || onError: ")
+            }
+
+        })
 
     }
 
