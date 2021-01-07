@@ -13,9 +13,7 @@ import io.reactivex.disposables.CompositeDisposable
 import io.reactivex.disposables.Disposable
 import io.reactivex.functions.Predicate
 import io.reactivex.schedulers.Schedulers
-import okhttp3.ResponseBody
 import java.io.IOException
-import java.util.concurrent.ExecutionException
 import java.util.concurrent.TimeUnit
 
 
@@ -30,44 +28,17 @@ class MainActivity : AppCompatActivity() {
         setContentView(R.layout.activity_main)
 
 
-        /** Learn Basics in function below*/
-//        learnBasics
-
         val viewModel = ViewModelProviders.of(this).get(
             MainViewModel::class.java
         )
-        try {
-            viewModel.makeFutureQuery().get()
-                .subscribeOn(Schedulers.io())
-                .observeOn(AndroidSchedulers.mainThread())
-                .subscribe(object : Observer<ResponseBody> {
-                    override fun onSubscribe(d: Disposable) {
-                        Log.d(TAG, "onSubscribe: called.")
-                    }
-
-                    override fun onNext(responseBody: ResponseBody) {
-                        Log.d(TAG, "onNext: got the response from server!")
-                        try {
-                            Log.d(TAG, "response: " + responseBody.string())
-                        } catch (e: IOException) {
-                            e.printStackTrace()
-                        }
-                    }
-
-                    override fun onError(e: Throwable) {
-                        Log.e(TAG, "onError: ", e)
-                    }
-
-                    override fun onComplete() {
-                        Log.d(TAG, "onComplete: called.")
-                    }
-                })
-        } catch (e: ExecutionException) {
-            e.printStackTrace()
-        } catch (e: InterruptedException) {
-            e.printStackTrace()
-        }
-
+        viewModel.makeQuery().observe(this, androidx.lifecycle.Observer { responseBody ->
+            Log.d(TAG, "onChanged: this is a live data response!")
+            try {
+                Log.d(TAG, "onChanged: " + responseBody.string())
+            } catch (e: IOException) {
+                e.printStackTrace()
+            }
+        })
 
     }
 
@@ -212,7 +183,7 @@ class MainActivity : AppCompatActivity() {
             .observeOn(AndroidSchedulers.mainThread())
 
         intervalObservable.subscribe(object :
-            Observer<Long>{
+            Observer<Long> {
             override fun onComplete() {
                 Log.d(TAG, "interval || onComplete: ")
             }

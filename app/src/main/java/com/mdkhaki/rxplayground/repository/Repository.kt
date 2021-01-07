@@ -1,50 +1,27 @@
 package com.mdkhaki.rxplayground.repository
 
+import androidx.lifecycle.LiveData
+import androidx.lifecycle.LiveDataReactiveStreams
 import com.mdkhaki.rxplayground.network.ServiceGenerator
-import io.reactivex.Observable
+import io.reactivex.schedulers.Schedulers
 import okhttp3.ResponseBody
-import java.util.concurrent.*
 
 
 class Repository {
-
-    companion object {
-        var instance: Repository ? =  null
-            get() {
-                return  field ?: Repository()
-            }
+    fun makeReactiveQuery(): LiveData<ResponseBody> {
+        return LiveDataReactiveStreams.fromPublisher(
+            ServiceGenerator.requestApi.makeQuery()!!.subscribeOn(Schedulers.io())
+        )
     }
 
-    fun makeFutureQuery(): Future<Observable<ResponseBody>> {
-        val executor: ExecutorService = Executors.newSingleThreadExecutor()
-        val myNetworkCallable: Callable<Observable<ResponseBody>> =
-            Callable<Observable<ResponseBody>> { ServiceGenerator.requestApi.makeObservableQuery() }
-        return object : Future<Observable<ResponseBody>> {
-            override fun cancel(mayInterruptIfRunning: Boolean): Boolean {
-                if (mayInterruptIfRunning) {
-                    executor.shutdown()
+    companion object {
+        var instance: Repository? = null
+            get() {
+                if (field == null) {
+                    field = Repository()
                 }
-                return false
+                return field
             }
-            override fun isDone(): Boolean {
-                return executor.isTerminated
-            }
-
-            override fun isCancelled(): Boolean {
-                return executor.isShutdown
-            }
-
-            @Throws(ExecutionException::class, InterruptedException::class)
-            override fun get(): Observable<ResponseBody> {
-                return executor.submit(myNetworkCallable).get()
-            }
-
-            @Throws(ExecutionException::class,
-                InterruptedException::class,
-                TimeoutException::class)
-            override fun get(timeout: Long, unit: TimeUnit?): Observable<ResponseBody> {
-                return executor.submit(myNetworkCallable).get(timeout, unit)
-            }
-        }
+            private set
     }
 }
